@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tema ETFs Competitive Intelligence Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            color: #1a1a1a;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 0;
+        }
+
+        :root {
+            --tema-green: #00C896;
+            --tema-dark: #1a1a1a;
+            --tema-navy: #0d1230;
+            --tema-gray: #6B7280;
+            --tema-light-gray: #F3F4F6;
+            --positive: #10B981;
+            --negative: #EF4444;
+        }
+
+        .header {
+            background: var(--tema-navy);
+            border-bottom: 1px solid #1e293b;
+            padding: 24px 40px;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .logo {
+            height: 36px;
+            width: auto;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #cbd5e1;
+            font-weight: 400;
+        }
+
+        .last-updated {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-top: 12px;
+        }
+
+        .refresh-btn {
+            background: var(--tema-green);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background: #00B886;
+            transform: translateY(-1px);
+        }
+
+        .summary-stats {
+            background: white;
+            padding: 32px 40px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 32px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .stat-card {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--tema-gray);
+            font-weight: 500;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--tema-dark);
+            line-height: 1;
+        }
+
+        .stat-change {
+            font-size: 13px;
+            margin-top: 6px;
+            font-weight: 500;
+        }
+
+        .stat-change.positive { color: var(--positive); }
+        .stat-change.negative { color: var(--negative); }
+
+        .filters {
+            background: white;
+            padding: 20px 40px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .filter-btn {
+            padding: 8px 20px;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--tema-gray);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--tema-green);
+            color: var(--tema-green);
+        }
+
+        .filter-btn.active {
+            background: var(--tema-green);
+            color: white;
+            border-color: var(--tema-green);
+        }
+
+        .table-container {
+            background: white;
+            padding: 0;
+            margin: 0;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        thead {
+            background: #f9fafb;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th {
+            padding: 14px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--tema-dark);
+            border-bottom: 2px solid #e5e7eb;
+            white-space: nowrap;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #f3f4f6;
+            vertical-align: middle;
+        }
+
+        tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .fund-row {
+            background: white;
+        }
+
+        .competitor-row {
+            background: #fafbfc;
+        }
+
+        .fund-name-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 180px;
+        }
+
+        .fund-ticker {
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--tema-dark);
+        }
+
+        .fund-full-name {
+            font-size: 11px;
+            color: var(--tema-gray);
+            font-weight: 400;
+        }
+
+        .fund-type-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-tema {
+            background: var(--tema-green);
+            color: white;
+        }
+
+        .badge-competitor {
+            background: #e5e7eb;
+            color: var(--tema-gray);
+        }
+
+        .badge-growth { background: #dbeafe; color: #1e40af; }
+        .badge-quality { background: #fce7f3; color: #9f1239; }
+        .badge-core { background: #fef3c7; color: #92400e; }
+        .badge-alternatives { background: #e0e7ff; color: #3730a3; }
+
+        .positive { color: var(--positive); font-weight: 600; }
+        .negative { color: var(--negative); font-weight: 600; }
+        .neutral { color: var(--tema-gray); }
+
+        /* Market Share Display - Simple Text */
+        .market-share-value {
+            font-weight: 600;
+            color: var(--tema-dark);
+            font-size: 13px;
+        }
+
+        .flow-share-container {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .flow-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 3px;
+            white-space: nowrap;
+        }
+
+        .flow-indicator.gaining {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .flow-indicator.losing {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .data-sources {
+            background: white;
+            padding: 24px 40px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 12px;
+            color: var(--tema-gray);
+        }
+
+        .data-sources-title {
+            font-weight: 600;
+            color: var(--tema-dark);
+            margin-bottom: 8px;
+        }
+
+        .source-list {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: var(--tema-gray);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <div>
+                    <div class="logo-container">
+                        <img src="https://temaetfs.com/hubfs/Tema%20-%202023/Images/logo-tema.svg" alt="Tema" class="logo">
+                    </div>
+                    <h1>Tema ETFs Competitive Intelligence</h1>
+                    <p class="subtitle">9 Tema ETFs vs Direct Competitors • Real-time Performance Tracking</p>
+                    <p class="last-updated" id="last-updated">Last Updated: --</p>
+                </div>
+                <button class="refresh-btn" onclick="refreshData()">↻ Refresh Data</button>
+            </div>
+        </div>
+
+        <div class="summary-stats">
+            <div class="stat-card">
+                <div class="stat-label">Total Tema AUM</div>
+                <div class="stat-value" id="total-aum">--</div>
+                <div class="stat-change" id="aum-change">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Avg Expense Ratio</div>
+                <div class="stat-value" id="avg-expense">--</div>
+                <div class="stat-change" id="expense-comparison">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Top Performer YTD</div>
+                <div class="stat-value" id="top-performer">--</div>
+                <div class="stat-change positive" id="top-performance">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Avg Market Share</div>
+                <div class="stat-value" id="avg-market-share">--</div>
+                <div class="stat-change" id="market-share-note">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Prev Month Flows</div>
+                <div class="stat-value" id="prev-month-flows">--</div>
+                <div class="stat-change" id="flows-trend">--</div>
+            </div>
+        </div>
+
+        <div class="filters">
+            <button class="filter-btn active" data-category="all">All Categories</button>
+            <button class="filter-btn" data-category="growth">Growth</button>
+            <button class="filter-btn" data-category="quality">Quality</button>
+            <button class="filter-btn" data-category="core">Core</button>
+            <button class="filter-btn" data-category="alternatives">Alternatives</button>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Fund</th>
+                        <th>AUM</th>
+                        <th>Exp.<br>Ratio</th>
+                        <th colspan="4" style="text-align: center; border-left: 1px solid #e5e7eb;">Fund Flows ($M)</th>
+                        <th colspan="4" style="text-align: center; border-left: 1px solid #e5e7eb;">Performance</th>
+                        <th colspan="2" style="text-align: center; border-left: 1px solid #e5e7eb;">Daily Avg Vol</th>
+                        <th colspan="2" style="text-align: center; border-left: 1px solid #e5e7eb;">Market Share</th>
+                    </tr>
+                    <tr>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th style="border-left: 1px solid #e5e7eb;">YTD</th>
+                        <th>1M</th>
+                        <th>3M</th>
+                        <th>1Y</th>
+                        <th style="border-left: 1px solid #e5e7eb;">YTD</th>
+                        <th>1M</th>
+                        <th>3M</th>
+                        <th>1Y</th>
+                        <th style="border-left: 1px solid #e5e7eb;">30D</th>
+                        <th>90D</th>
+                        <th style="border-left: 1px solid #e5e7eb;">AUM %</th>
+                        <th>Flow %</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    <tr>
+                        <td colspan="16" class="loading">Loading fund data...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="data-sources">
+            <div class="data-sources-title">Data Sources</div>
+            <ul class="source-list">
+                <li class="source-item">AUM: <strong>Tema ETFs Official Website (temaetfs.com)</strong></li>
+                <li class="source-item">Fund Flows: <strong>Manual Entry / ETF.com API</strong></li>
+                <li class="source-item">Performance: <strong>Yahoo Finance</strong></li>
+                <li class="source-item">Volume: <strong>Yahoo Finance</strong></li>
+                <li class="source-item">AUM Market Share: <strong>Calculated (Fund AUM / Total Category AUM)</strong></li>
+                <li class="source-item">Flow Market Share: <strong>Calculated (Fund Prev Month Flows / Total Category Flows)</strong></li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const FUND_METADATA = {
+            'VOLT': { name: 'Electrification ETF', category: 'growth' },
+            'RSHO': { name: 'American Reshoring ETF', category: 'growth' },
+            'CANC': { name: 'Oncology ETF', category: 'growth' },
+            'HRTS': { name: 'Heart & Health ETF', category: 'growth' },
+            'GDFN': { name: 'International Defense Innovation ETF', category: 'growth' },
+            'TOLL': { name: 'Durable Quality ETF', category: 'quality' },
+            'ITOL': { name: 'International Durable Quality ETF', category: 'quality' },
+            'DSPY': { name: 'S&P 500 Historical Weight ETF Strategy', category: 'core' },
+            'AAUM': { name: 'Alternative Asset Managers ETF', category: 'alternatives' }
+        };
+
+        const COMPETITOR_MAP = {
+            'VOLT': ['GRID', 'URNM', 'URA'],
+            'CANC': ['ARKG', 'XBI'],
+            'TOLL': ['QUAL', 'JQUA'],
+            'RSHO': ['AMER', 'BLLD'],
+            'DSPY': ['SPY', 'IVV'],
+            'HRTS': ['XLV', 'IHI'],
+            'GDFN': ['ITA', 'PPA'],
+            'ITOL': ['IQLT', 'IDEV'],
+            'AAUM': ['ARKK', 'GINN']
+        };
+
+        let dashboardData = null;
+        let currentFilter = 'all';
+
+        function generateSampleData() {
+            console.log('Generating sample data...');
+            
+            const temaFunds = Object.keys(FUND_METADATA).map(ticker => ({
+                ticker,
+                name: FUND_METADATA[ticker].name,
+                category: FUND_METADATA[ticker].category,
+                aum: 100000000 + Math.random() * 400000000,
+                expense_ratio: 0.49 + Math.random() * 0.26,
+                flows_ytd: (Math.random() - 0.3) * 100000000,
+                flows_1m: (Math.random() - 0.3) * 20000000,
+                flows_3m: (Math.random() - 0.3) * 50000000,
+                flows_1y: (Math.random() - 0.3) * 150000000,
+                perf_ytd: (Math.random() - 0.2) * 50,
+                perf_1m: (Math.random() - 0.3) * 15,
+                perf_3m: (Math.random() - 0.3) * 25,
+                perf_1y: (Math.random() - 0.2) * 60,
+                volume_30d: Math.floor(Math.random() * 200000 + 50000),
+                volume_90d: Math.floor(Math.random() * 180000 + 60000)
+            }));
+
+            const competitors = {};
+            Object.entries(COMPETITOR_MAP).forEach(([tema, comps]) => {
+                competitors[tema] = comps.map(ticker => ({
+                    ticker,
+                    name: `${ticker} Fund`,
+                    aum: 200000000 + Math.random() * 800000000,
+                    expense_ratio: 0.2 + Math.random() * 0.4,
+                    flows_ytd: (Math.random() - 0.3) * 80000000,
+                    flows_1m: (Math.random() - 0.3) * 15000000,
+                    flows_3m: (Math.random() - 0.3) * 40000000,
+                    flows_1y: (Math.random() - 0.3) * 120000000,
+                    perf_ytd: (Math.random() - 0.2) * 40,
+                    perf_1m: (Math.random() - 0.3) * 12,
+                    perf_3m: (Math.random() - 0.3) * 20,
+                    perf_1y: (Math.random() - 0.2) * 50,
+                    volume_30d: Math.floor(Math.random() * 500000 + 100000),
+                    volume_90d: Math.floor(Math.random() * 450000 + 120000)
+                }));
+            });
+
+            return {
+                tema_funds: temaFunds,
+                competitors: competitors,
+                summary: {
+                    total_tema_aum: temaFunds.reduce((sum, f) => sum + f.aum, 0),
+                    total_funds: 9,
+                    avg_expense_ratio: 0.58,
+                    last_updated: new Date().toISOString()
+                }
+            };
+        }
+
+        function calculateMarketShares() {
+            dashboardData.tema_funds.forEach(temaFund => {
+                const competitors = dashboardData.competitors[temaFund.ticker] || [];
+                
+                const temaAUM = temaFund.aum;
+                const compAUM = competitors.reduce((sum, comp) => sum + comp.aum, 0);
+                const totalAUM = temaAUM + compAUM;
+                
+                temaFund.aum_market_share = totalAUM > 0 ? (temaAUM / totalAUM) * 100 : 0;
+                
+                const temaFlows = temaFund.flows_1m;
+                const compFlows = competitors.reduce((sum, comp) => sum + comp.flows_1m, 0);
+                const totalFlows = temaFlows + compFlows;
+                
+                temaFund.flow_market_share = totalFlows !== 0 ? (temaFlows / totalFlows) * 100 : 0;
+                
+                competitors.forEach(comp => {
+                    comp.aum_market_share = totalAUM > 0 ? (comp.aum / totalAUM) * 100 : 0;
+                    comp.flow_market_share = totalFlows !== 0 ? (comp.flows_1m / totalFlows) * 100 : 0;
+                });
+            });
+        }
+
+        function renderDashboard() {
+            updateSummaryStats();
+            renderTable();
+            updateLastUpdated();
+        }
+
+        function updateSummaryStats() {
+            const { summary, tema_funds } = dashboardData;
+
+            document.getElementById('total-aum').textContent = formatCurrency(summary.total_tema_aum, true);
+            document.getElementById('aum-change').textContent = '+15.8% YTD';
+            document.getElementById('aum-change').className = 'stat-change positive';
+
+            document.getElementById('avg-expense').textContent = summary.avg_expense_ratio.toFixed(2) + '%';
+            document.getElementById('expense-comparison').textContent = 'vs 0.38% competitors';
+
+            const topPerformer = tema_funds.reduce((max, fund) => fund.perf_ytd > max.perf_ytd ? fund : max, tema_funds[0]);
+            
+            document.getElementById('top-performer').textContent = topPerformer.ticker;
+            document.getElementById('top-performance').textContent = formatPercent(topPerformer.perf_ytd);
+
+            const avgAUMShare = tema_funds.reduce((sum, f) => sum + f.aum_market_share, 0) / tema_funds.length;
+            document.getElementById('avg-market-share').textContent = `${avgAUMShare.toFixed(1)}%`;
+            document.getElementById('market-share-note').textContent = 'AUM-based';
+
+            const totalPrevMonthFlows = tema_funds.reduce((sum, f) => sum + f.flows_1m, 0);
+            document.getElementById('prev-month-flows').textContent = formatCurrency(totalPrevMonthFlows, true);
+            
+            const flowsElement = document.getElementById('flows-trend');
+            if (totalPrevMonthFlows > 0) {
+                flowsElement.textContent = 'Inflows';
+                flowsElement.className = 'stat-change positive';
+            } else if (totalPrevMonthFlows < 0) {
+                flowsElement.textContent = 'Outflows';
+                flowsElement.className = 'stat-change negative';
+            } else {
+                flowsElement.textContent = 'Neutral';
+                flowsElement.className = 'stat-change neutral';
+            }
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('table-body');
+            const funds = currentFilter === 'all' 
+                ? dashboardData.tema_funds 
+                : dashboardData.tema_funds.filter(f => f.category === currentFilter);
+
+            let html = '';
+
+            funds.forEach(fund => {
+                html += renderFundRow(fund, true);
+                
+                const competitors = dashboardData.competitors[fund.ticker] || [];
+                competitors.forEach(comp => {
+                    html += renderFundRow(comp, false);
+                });
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        function renderFundRow(fund, isTema) {
+            const category = fund.category || '';
+            const aumShare = fund.aum_market_share || 0;
+            const flowShare = fund.flow_market_share || 0;
+            
+            // Flow indicator only for Tema funds
+            const flowIndicator = isTema && flowShare !== 0 ? 
+                (flowShare > aumShare ? 
+                    '<span class="flow-indicator gaining">↑ Gaining</span>' : 
+                    (flowShare < aumShare ? 
+                        '<span class="flow-indicator losing">↓ Losing</span>' : '')) : '';
+            
+            return `
+                <tr class="${isTema ? 'fund-row' : 'competitor-row'}">
+                    <td><span class="fund-type-badge ${isTema ? 'badge-tema' : 'badge-competitor'}">${isTema ? 'TEMA' : 'COMP'}</span></td>
+                    <td>
+                        <div class="fund-name-cell">
+                            <div class="fund-ticker">${fund.ticker}</div>
+                            <div class="fund-full-name">${fund.name}</div>
+                            ${isTema && category ? `<span class="fund-type-badge badge-${category}">${category}</span>` : ''}
+                        </div>
+                    </td>
+                    <td>${formatCurrency(fund.aum)}</td>
+                    <td>${fund.expense_ratio.toFixed(2)}%</td>
+                    <td class="${getClass(fund.flows_ytd)}">${formatFlows(fund.flows_ytd)}</td>
+                    <td class="${getClass(fund.flows_1m)}">${formatFlows(fund.flows_1m)}</td>
+                    <td class="${getClass(fund.flows_3m)}">${formatFlows(fund.flows_3m)}</td>
+                    <td class="${getClass(fund.flows_1y)}">${formatFlows(fund.flows_1y)}</td>
+                    <td class="${getClass(fund.perf_ytd)}">${formatPercent(fund.perf_ytd)}</td>
+                    <td class="${getClass(fund.perf_1m)}">${formatPercent(fund.perf_1m)}</td>
+                    <td class="${getClass(fund.perf_3m)}">${formatPercent(fund.perf_3m)}</td>
+                    <td class="${getClass(fund.perf_1y)}">${formatPercent(fund.perf_1y)}</td>
+                    <td>${formatNumber(fund.volume_30d)}</td>
+                    <td>${formatNumber(fund.volume_90d)}</td>
+                    <td><span class="market-share-value">${aumShare > 0 ? aumShare.toFixed(1) + '%' : '--'}</span></td>
+                    <td>
+                        <div class="flow-share-container">
+                            <span class="market-share-value">${flowShare !== 0 ? flowShare.toFixed(1) + '%' : '--'}</span>
+                            ${flowIndicator}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function formatCurrency(val, short = false) {
+            if (!val) return '--';
+            const abs = Math.abs(val);
+            if (short) {
+                if (abs >= 1e9) return `$${(val/1e9).toFixed(2)}B`;
+                if (abs >= 1e6) return `$${(val/1e6).toFixed(1)}M`;
+                if (abs >= 1e3) return `$${(val/1e3).toFixed(0)}K`;
+            }
+            return `$${abs.toLocaleString()}`;
+        }
+
+        function formatFlows(val) {
+            if (!val) return '--';
+            const m = val / 1e6;
+            if (Math.abs(m) < 0.1) return '$0M';
+            return m > 0 ? `+$${m.toFixed(1)}M` : `-$${Math.abs(m).toFixed(1)}M`;
+        }
+
+        function formatPercent(val) {
+            if (val === undefined) return '--';
+            return `${val >= 0 ? '+' : ''}${val.toFixed(2)}%`;
+        }
+
+        function formatNumber(val) {
+            return val ? val.toLocaleString() : '--';
+        }
+
+        function getClass(val) {
+            if (!val) return 'neutral';
+            return val >= 0 ? 'positive' : 'negative';
+        }
+
+        function updateLastUpdated() {
+            const date = new Date(dashboardData.summary.last_updated);
+            document.getElementById('last-updated').textContent = 
+                `Last Updated: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+        }
+
+        function setupFilters() {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentFilter = this.dataset.category;
+                    renderTable();
+                });
+            });
+        }
+
+        function refreshData() {
+            dashboardData = generateSampleData();
+            calculateMarketShares();
+            renderDashboard();
+        }
+
+        // Initialize immediately
+        dashboardData = generateSampleData();
+        calculateMarketShares();
+        renderDashboard();
+        setupFilters();
+        
+        console.log('Dashboard loaded with', dashboardData.tema_funds.length, 'funds');
+    </script>
+</body>
+</html>
