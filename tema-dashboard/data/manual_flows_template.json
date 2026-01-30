@@ -1,0 +1,124 @@
+{
+  "meta": {
+    "last_updated": "2026-01-28",
+    "data_source": "Manual entry - Bloomberg Terminal / ETF.com",
+    "reporting_period": "December 2025",
+    "notes": "Update this file monthly with previous month's flow data"
+  },
+  "flows": {
+    "VOLT": {
+      "ticker": "VOLT",
+      "flows_prev_month": 15200000,
+      "flows_prev_month_formatted": "$15.2M",
+      "flows_3m": 42500000,
+      "flows_ytd": 85000000,
+      "flows_1y": 125000000,
+      "as_of_date": "2025-12-31"
+    },
+    "RSHO": {
+      "ticker": "RSHO",
+      "flows_prev_month": 8300000,
+      "flows_prev_month_formatted": "$8.3M",
+      "flows_3m": 22100000,
+      "flows_ytd": 48500000,
+      "flows_1y": 67200000,
+      "as_of_date": "2025-12-31"
+    },
+    "CANC": {
+      "ticker": "CANC",
+      "flows_prev_month": 12800000,
+      "flows_prev_month_formatted": "$12.8M",
+      "flows_3m": 35400000,
+      "flows_ytd": 78900000,
+      "flows_1y": 95600000,
+      "as_of_date": "2025-12-31"
+    },
+    "TOLL": {
+      "ticker": "TOLL",
+      "flows_prev_month": 18500000,
+      "flows_prev_month_formatted": "$18.5M",
+      "flows_3m": 52300000,
+      "flows_ytd": 125800000,
+      "flows_1y": 168400000,
+      "as_of_date": "2025-12-31"
+    },
+    "HRTS": {
+      "ticker": "HRTS",
+      "flows_prev_month": 6700000,
+      "flows_prev_month_formatted": "$6.7M",
+      "flows_3m": 18200000,
+      "flows_ytd": 42300000,
+      "flows_1y": 58900000,
+      "as_of_date": "2025-12-31"
+    },
+    "MNTL": {
+      "ticker": "MNTL",
+      "flows_prev_month": 4200000,
+      "flows_prev_month_formatted": "$4.2M",
+      "flows_3m": 11800000,
+      "flows_ytd": 28500000,
+      "flows_1y": 35600000,
+      "as_of_date": "2025-12-31"
+    },
+    "DSPY": {
+      "ticker": "DSPY",
+      "flows_prev_month": 22100000,
+      "flows_prev_month_formatted": "$22.1M",
+      "flows_3m": 68500000,
+      "flows_ytd": 185200000,
+      "flows_1y": 245800000,
+      "as_of_date": "2025-12-31"
+    },
+    "AAUM": {
+      "ticker": "AAUM",
+      "flows_prev_month": 3800000,
+      "flows_prev_month_formatted": "$3.8M",
+      "flows_3m": 10200000,
+      "flows_ytd": 24700000,
+      "flows_1y": 32400000,
+      "as_of_date": "2025-12-31"
+    },
+    "ITOL": {
+      "ticker": "ITOL",
+      "flows_prev_month": 9400000,
+      "flows_prev_month_formatted": "$9.4M",
+      "flows_3m": 26800000,
+      "flows_ytd": 62100000,
+      "flows_1y": 78500000,
+      "as_of_date": "2025-12-31"
+    },
+    "GDFN": {
+      "ticker": "GDFN",
+      "flows_prev_month": 11200000,
+      "flows_prev_month_formatted": "$11.2M",
+      "flows_3m": 31500000,
+      "flows_ytd": 72800000,
+      "flows_1y": 92300000,
+      "as_of_date": "2025-12-31"
+    }
+  },
+  "instructions": {
+    "how_to_update": [
+      "1. Obtain flow data for previous month from Bloomberg Terminal or ETF.com",
+      "2. Update each fund's flows_prev_month value (in dollars, not millions)",
+      "3. Update flows_prev_month_formatted for readability",
+      "4. Update flows_3m, flows_ytd, flows_1y if available",
+      "5. Update as_of_date to last day of reporting period",
+      "6. Update meta.last_updated to today's date",
+      "7. Update meta.reporting_period to the month being reported",
+      "8. Save file",
+      "9. Trigger dashboard refresh or wait for next scheduled update"
+    ],
+    "data_sources": [
+      "Bloomberg Terminal: VOLT <equity> DES -> Flows tab",
+      "ETF.com: Navigate to fund page -> Fund Flows section",
+      "ETFdb.com Pro: API or manual lookup",
+      "FactSet: ETF flow reports"
+    ],
+    "example_calculation": {
+      "description": "If Bloomberg shows +$15.2M inflow for December 2025",
+      "flows_prev_month": 15200000,
+      "note": "Negative numbers indicate outflows"
+    }
+  }
+}
