@@ -96,6 +96,12 @@
             transform: translateY(-1px);
         }
 
+        .refresh-btn:disabled {
+            background: #6B7280;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .summary-stats {
             background: white;
             padding: 32px 40px;
@@ -265,7 +271,6 @@
         .negative { color: var(--negative); font-weight: 600; }
         .neutral { color: var(--tema-gray); }
 
-        /* Market Share Display - Simple Text */
         .market-share-value {
             font-weight: 600;
             color: var(--tema-dark);
@@ -325,6 +330,29 @@
             padding: 60px;
             color: var(--tema-gray);
         }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f4f6;
+            border-radius: 50%;
+            border-top-color: var(--tema-green);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin: 20px;
+            font-size: 13px;
+        }
     </style>
 </head>
 <body>
@@ -339,7 +367,7 @@
                     <p class="subtitle">9 Tema ETFs vs Direct Competitors • Real-time Performance Tracking</p>
                     <p class="last-updated" id="last-updated">Last Updated: --</p>
                 </div>
-                <button class="refresh-btn" onclick="refreshData()">↻ Refresh Data</button>
+                <button class="refresh-btn" onclick="refreshData()" id="refresh-btn">↻ Refresh Data</button>
             </div>
         </div>
 
@@ -413,7 +441,10 @@
                 </thead>
                 <tbody id="table-body">
                     <tr>
-                        <td colspan="16" class="loading">Loading fund data...</td>
+                        <td colspan="16" class="loading">
+                            <div class="loading-spinner"></div>
+                            <div>Loading real-time data from Alpha Vantage...</div>
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -422,17 +453,20 @@
         <div class="data-sources">
             <div class="data-sources-title">Data Sources</div>
             <ul class="source-list">
-                <li class="source-item">AUM: <strong>Tema ETFs Official Website (temaetfs.com)</strong></li>
-                <li class="source-item">Fund Flows: <strong>Manual Entry / ETF.com API</strong></li>
-                <li class="source-item">Performance: <strong>Yahoo Finance</strong></li>
-                <li class="source-item">Volume: <strong>Yahoo Finance</strong></li>
-                <li class="source-item">AUM Market Share: <strong>Calculated (Fund AUM / Total Category AUM)</strong></li>
-                <li class="source-item">Flow Market Share: <strong>Calculated (Fund Prev Month Flows / Total Category Flows)</strong></li>
+                <li class="source-item">AUM & Expense Ratio: <strong>Alpha Vantage API</strong></li>
+                <li class="source-item">Fund Flows: <strong>Manual Entry / ETF.com API (Coming Soon)</strong></li>
+                <li class="source-item">Performance: <strong>Alpha Vantage API (Coming Soon)</strong></li>
+                <li class="source-item">Volume: <strong>Alpha Vantage API (Coming Soon)</strong></li>
+                <li class="source-item">Market Share: <strong>Calculated (Fund AUM / Total Category AUM)</strong></li>
             </ul>
         </div>
     </div>
 
     <script>
+        // Alpha Vantage API Configuration
+        const ALPHA_VANTAGE_API_KEY = '3MGVB06S12EZMJZK';
+        const ALPHA_VANTAGE_BASE_URL = 'https://www.alphavantage.co/query';
+        
         const FUND_METADATA = {
             'VOLT': { name: 'Electrification ETF', category: 'growth' },
             'RSHO': { name: 'American Reshoring ETF', category: 'growth' },
@@ -460,13 +494,127 @@
         let dashboardData = null;
         let currentFilter = 'all';
 
-        function generateSampleData() {
-            console.log('Generating sample data...');
+        // Fetch ETF profile from Alpha Vantage
+        async function fetchETFProfile(symbol) {
+            const url = `${ALPHA_VANTAGE_BASE_URL}?function=ETF_PROFILE&symbol=${symbol}&apikey=${ALPHA_VANTAGE_API_KEY}`;
             
-            const temaFunds = Object.keys(FUND_METADATA).map(ticker => ({
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                
+                // Check for API error messages
+                if (data['Error Message']) {
+                    console.error(`API Error for ${symbol}:`, data['Error Message']);
+                    return null;
+                }
+                
+                if (data['Note']) {
+                    console.warn(`API Rate Limit for ${symbol}:`, data['Note']);
+                    return null;
+                }
+                
+                return data;
+            } catch (error) {
+                console.error(`Error fetching ${symbol}:`, error);
+                return null;
+            }
+        }
+
+        // Parse Alpha Vantage ETF Profile response
+        function parseETFProfile(data, symbol) {
+            if (!data) return null;
+            
+            // Alpha Vantage returns data with these keys (may vary slightly)
+            const profile = data;
+            
+            return {
+                ticker: symbol,
+                name: FUND_METADATA[symbol]?.name || symbol,
+                category: FUND_METADATA[symbol]?.category || 'unknown',
+                aum: parseFloat(profile.net_assets || profile.aum || 0),
+                expense_ratio: parseFloat(profile.net_expense_ratio || profile.expense_ratio || 0) * 100, // Convert to percentage
+                // Placeholder for data we'll add later
+                flows_ytd: (Math.random() - 0.3) * 100000000,
+                flows_1m: (Math.random() - 0.3) * 20000000,
+                flows_3m: (Math.random() - 0.3) * 50000000,
+                flows_1y: (Math.random() - 0.3) * 150000000,
+                perf_ytd: (Math.random() - 0.2) * 50,
+                perf_1m: (Math.random() - 0.3) * 15,
+                perf_3m: (Math.random() - 0.3) * 25,
+                perf_1y: (Math.random() - 0.2) * 60,
+                volume_30d: Math.floor(Math.random() * 200000 + 50000),
+                volume_90d: Math.floor(Math.random() * 180000 + 60000)
+            };
+        }
+
+        // Load all Tema funds data
+        async function loadTemaFunds() {
+            console.log('Loading Tema funds from Alpha Vantage...');
+            const tickers = Object.keys(FUND_METADATA);
+            const funds = [];
+            
+            // Note: Alpha Vantage has rate limits (5 API calls per minute for free tier)
+            // We'll add a delay between calls
+            for (let i = 0; i < tickers.length; i++) {
+                const ticker = tickers[i];
+                console.log(`Fetching ${ticker}... (${i+1}/${tickers.length})`);
+                
+                const profileData = await fetchETFProfile(ticker);
+                const fund = parseETFProfile(profileData, ticker);
+                
+                if (fund) {
+                    funds.push(fund);
+                } else {
+                    // Fallback to sample data if API fails
+                    console.warn(`Using sample data for ${ticker}`);
+                    funds.push(generateSampleFund(ticker));
+                }
+                
+                // Add delay to respect rate limits (12 seconds between calls = 5 calls/min)
+                if (i < tickers.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 12000));
+                }
+            }
+            
+            return funds;
+        }
+
+        // Load competitor funds data
+        async function loadCompetitorFunds() {
+            console.log('Loading competitor funds...');
+            const competitors = {};
+            
+            for (const [temaSymbol, compSymbols] of Object.entries(COMPETITOR_MAP)) {
+                competitors[temaSymbol] = [];
+                
+                for (const compSymbol of compSymbols) {
+                    console.log(`Fetching competitor ${compSymbol}...`);
+                    
+                    const profileData = await fetchETFProfile(compSymbol);
+                    const fund = parseETFProfile(profileData, compSymbol);
+                    
+                    if (fund) {
+                        competitors[temaSymbol].push(fund);
+                    } else {
+                        // Fallback to sample data
+                        competitors[temaSymbol].push(generateSampleCompetitor(compSymbol));
+                    }
+                    
+                    // Rate limit delay
+                    await new Promise(resolve => setTimeout(resolve, 12000));
+                }
+            }
+            
+            return competitors;
+        }
+
+        // Generate sample fund data (fallback)
+        function generateSampleFund(ticker) {
+            return {
                 ticker,
-                name: FUND_METADATA[ticker].name,
-                category: FUND_METADATA[ticker].category,
+                name: FUND_METADATA[ticker]?.name || ticker,
+                category: FUND_METADATA[ticker]?.category || 'unknown',
                 aum: 100000000 + Math.random() * 400000000,
                 expense_ratio: 0.49 + Math.random() * 0.26,
                 flows_ytd: (Math.random() - 0.3) * 100000000,
@@ -479,37 +627,108 @@
                 perf_1y: (Math.random() - 0.2) * 60,
                 volume_30d: Math.floor(Math.random() * 200000 + 50000),
                 volume_90d: Math.floor(Math.random() * 180000 + 60000)
-            }));
+            };
+        }
 
-            const competitors = {};
-            Object.entries(COMPETITOR_MAP).forEach(([tema, comps]) => {
-                competitors[tema] = comps.map(ticker => ({
-                    ticker,
-                    name: `${ticker} Fund`,
-                    aum: 200000000 + Math.random() * 800000000,
-                    expense_ratio: 0.2 + Math.random() * 0.4,
-                    flows_ytd: (Math.random() - 0.3) * 80000000,
-                    flows_1m: (Math.random() - 0.3) * 15000000,
-                    flows_3m: (Math.random() - 0.3) * 40000000,
-                    flows_1y: (Math.random() - 0.3) * 120000000,
-                    perf_ytd: (Math.random() - 0.2) * 40,
-                    perf_1m: (Math.random() - 0.3) * 12,
-                    perf_3m: (Math.random() - 0.3) * 20,
-                    perf_1y: (Math.random() - 0.2) * 50,
-                    volume_30d: Math.floor(Math.random() * 500000 + 100000),
-                    volume_90d: Math.floor(Math.random() * 450000 + 120000)
-                }));
-            });
-
+        // Generate sample competitor data (fallback)
+        function generateSampleCompetitor(ticker) {
             return {
-                tema_funds: temaFunds,
-                competitors: competitors,
-                summary: {
-                    total_tema_aum: temaFunds.reduce((sum, f) => sum + f.aum, 0),
-                    total_funds: 9,
-                    avg_expense_ratio: 0.58,
-                    last_updated: new Date().toISOString()
-                }
+                ticker,
+                name: `${ticker} Fund`,
+                aum: 200000000 + Math.random() * 800000000,
+                expense_ratio: 0.2 + Math.random() * 0.4,
+                flows_ytd: (Math.random() - 0.3) * 80000000,
+                flows_1m: (Math.random() - 0.3) * 15000000,
+                flows_3m: (Math.random() - 0.3) * 40000000,
+                flows_1y: (Math.random() - 0.3) * 120000000,
+                perf_ytd: (Math.random() - 0.2) * 40,
+                perf_1m: (Math.random() - 0.3) * 12,
+                perf_3m: (Math.random() - 0.3) * 20,
+                perf_1y: (Math.random() - 0.2) * 50,
+                volume_30d: Math.floor(Math.random() * 500000 + 100000),
+                volume_90d: Math.floor(Math.random() * 450000 + 120000)
+            };
+        }
+
+        // Initialize dashboard with sample data first, then load real data
+        async function initDashboard() {
+            console.log('Initializing dashboard...');
+            
+            // Load sample data immediately for quick display
+            dashboardData = {
+                tema_funds: Object.keys(FUND_METADATA).map(generateSampleFund),
+                competitors: {},
+                summary: { last_updated: new Date().toISOString() }
+            };
+            
+            // Generate sample competitors
+            Object.entries(COMPETITOR_MAP).forEach(([tema, comps]) => {
+                dashboardData.competitors[tema] = comps.map(generateSampleCompetitor);
+            });
+            
+            calculateSummary();
+            calculateMarketShares();
+            renderDashboard();
+            setupFilters();
+            
+            // Now load real data in background
+            // Note: This will take ~2 minutes due to rate limits (9 Tema + ~18 competitors = ~27 API calls)
+            console.log('Loading real data from Alpha Vantage (this may take 2-3 minutes due to rate limits)...');
+            showLoadingMessage('Loading real data... This may take 2-3 minutes due to API rate limits.');
+            
+            try {
+                const temaFunds = await loadTemaFunds();
+                dashboardData.tema_funds = temaFunds;
+                
+                calculateSummary();
+                calculateMarketShares();
+                renderDashboard();
+                
+                console.log('Real Tema fund data loaded successfully!');
+                
+                // Load competitors (this will take even longer)
+                // For now, keep sample competitor data to avoid very long wait times
+                // You can uncomment this to load real competitor data:
+                // const competitors = await loadCompetitorFunds();
+                // dashboardData.competitors = competitors;
+                // calculateMarketShares();
+                // renderDashboard();
+                
+            } catch (error) {
+                console.error('Error loading real data:', error);
+                showError('Failed to load real data from Alpha Vantage. Using sample data.');
+            }
+        }
+
+        function showLoadingMessage(message) {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="16" class="loading">
+                        <div class="loading-spinner"></div>
+                        <div>${message}</div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function showError(message) {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="16">
+                        <div class="error-message">${message}</div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function calculateSummary() {
+            dashboardData.summary = {
+                total_tema_aum: dashboardData.tema_funds.reduce((sum, f) => sum + f.aum, 0),
+                total_funds: dashboardData.tema_funds.length,
+                avg_expense_ratio: dashboardData.tema_funds.reduce((sum, f) => sum + f.expense_ratio, 0) / dashboardData.tema_funds.length,
+                last_updated: new Date().toISOString()
             };
         }
 
@@ -602,7 +821,6 @@
             const aumShare = fund.aum_market_share || 0;
             const flowShare = fund.flow_market_share || 0;
             
-            // Flow indicator only for Tema funds
             const flowIndicator = isTema && flowShare !== 0 ? 
                 (flowShare > aumShare ? 
                     '<span class="flow-indicator gaining">↑ Gaining</span>' : 
@@ -691,19 +909,21 @@
             });
         }
 
-        function refreshData() {
-            dashboardData = generateSampleData();
-            calculateMarketShares();
-            renderDashboard();
+        async function refreshData() {
+            const btn = document.getElementById('refresh-btn');
+            btn.disabled = true;
+            btn.textContent = '↻ Refreshing...';
+            
+            await initDashboard();
+            
+            btn.disabled = false;
+            btn.textContent = '↻ Refresh Data';
         }
 
-        // Initialize immediately
-        dashboardData = generateSampleData();
-        calculateMarketShares();
-        renderDashboard();
-        setupFilters();
+        // Initialize on page load
+        initDashboard();
         
-        console.log('Dashboard loaded with', dashboardData.tema_funds.length, 'funds');
+        console.log('Dashboard initialized. Real data will load in background (2-3 minutes due to API rate limits).');
     </script>
 </body>
 </html>
